@@ -1,5 +1,6 @@
 use cm;
 use html;
+use parser::HeaderIdProcessing;
 use timebomb::timeout_ms;
 use {parse_document, Arena, ComrakOptions};
 
@@ -564,22 +565,22 @@ fn superscript() {
 fn header_ids() {
     html_opts(
         concat!(
-            "# Hi.\n",
-            "## Hi 1.\n",
-            "### Hi.\n",
-            "#### Hello.\n",
-            "##### Hi.\n",
-            "###### Hello.\n",
-            "# Isn't it grand?"
+        "# Hi.\n",
+        "## Hi 1.\n",
+        "### Hi.\n",
+        "#### Hello.\n",
+        "##### Hi.\n",
+        "###### Hello.\n",
+        "# Isn't it grand?"
         ),
         concat!(
-            "<h1><a href=\"#hi\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi\"></a>Hi.</h1>\n",
-            "<h2><a href=\"#hi-1\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi-1\"></a>Hi 1.</h2>\n",
-            "<h3><a href=\"#hi-2\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi-2\"></a>Hi.</h3>\n",
-            "<h4><a href=\"#hello\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hello\"></a>Hello.</h4>\n",
-            "<h5><a href=\"#hi-3\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi-3\"></a>Hi.</h5>\n",
-            "<h6><a href=\"#hello-1\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hello-1\"></a>Hello.</h6>\n",
-            "<h1><a href=\"#isnt-it-grand\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-isnt-it-grand\"></a>Isn't it grand?</h1>\n"
+        "<h1><a href=\"#hi\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi\"></a>Hi.</h1>\n",
+        "<h2><a href=\"#hi-1\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi-1\"></a>Hi 1.</h2>\n",
+        "<h3><a href=\"#hi-2\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi-2\"></a>Hi.</h3>\n",
+        "<h4><a href=\"#hello\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hello\"></a>Hello.</h4>\n",
+        "<h5><a href=\"#hi-3\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hi-3\"></a>Hi.</h5>\n",
+        "<h6><a href=\"#hello-1\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-hello-1\"></a>Hello.</h6>\n",
+        "<h1><a href=\"#isnt-it-grand\" aria-hidden=\"true\" class=\"anchor\" id=\"user-content-isnt-it-grand\"></a>Isn't it grand?</h1>\n"
         ),
         |opts| opts.extension.header_ids = Some("user-content-".to_owned()),
     );
@@ -589,19 +590,19 @@ fn header_ids() {
 fn test_header_id_slugify() {
     html_opts(
         concat!(
-            "# README\n",
-            "# Hi.\n",
-            "## Hi 1.\n",
-            "### Hi.\n",
-            "#### Hello.\n",
-            "##### Hi.\n",
-            "###### Hello.\n",
-            "# Isn't it grand?\n",
-            "## hello world\n",
-            "### 你好，世界\n",
-            "#### 你好   世界\n",
-            "##### 你好世界    a  very           long and bad format line    ok there    should     be    an   end\n",
-            "###### 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127\n",
+        "# README\n",
+        "# Hi.\n",
+        "## Hi 1.\n",
+        "### Hi.\n",
+        "#### Hello.\n",
+        "##### Hi.\n",
+        "###### Hello.\n",
+        "# Isn't it grand?\n",
+        "## hello world\n",
+        "### 你好，世界\n",
+        "#### 你好   世界\n",
+        "##### 你好世界    a  very           long and bad format line    ok there    should     be    an   end\n",
+        "###### 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127\n",
         ),
         concat!(
         r###"<h1 class="title-anchor" data-level="1" id="prefix-readme-suffix"><a href="#link-prefix-readme-suffix" aria-hidden="true" class="link-anchor" data-level="1"  id="link-prefix-readme-suffix"></a>README</h1>
@@ -618,9 +619,65 @@ fn test_header_id_slugify() {
 <h5 class="title-anchor" data-level="5" id="prefix-ni-hao-shi-jie-a-very-long-and-bad-format-line-ok-there-should-be-an-end-suffix"><a href="#link-prefix-ni-hao-shi-jie-a-very-long-and-bad-format-line-ok-there-should-be-an-end-suffix" aria-hidden="true" class="link-anchor" data-level="5"  id="link-prefix-ni-hao-shi-jie-a-very-long-and-bad-format-line-ok-there-should-be-an-end-suffix"></a>你好世界    a  very           long and bad format line    ok there    should     be    an   end</h5>
 <h6 class="title-anchor" data-level="6" id="prefix-0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-33-34-35-36-37-38-39-40-41-42-43-44-45--suffix"><a href="#link-prefix-0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-33-34-35-36-37-38-39-40-41-42-43-44-45--suffix" aria-hidden="true" class="link-anchor" data-level="6"  id="link-prefix-0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-33-34-35-36-37-38-39-40-41-42-43-44-45--suffix"></a>0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127</h6>
 "###,
-
         ),
-        |opts| opts.extension.header_id_slugify = Some(("prefix-".to_string(),"-suffix".to_string()))
+        |opts| opts.extension.header_id_slugify = Some(("prefix-".to_string(), "-suffix".to_string())),
+    );
+}
+
+#[test]
+fn test_header_id_fn() {
+    use slugify::slugify;
+
+    #[derive(Debug)]
+    struct A;
+    impl HeaderIdProcessing for A {
+        fn process_header_id(&self, level: u32, text: &str) -> String {
+            let _ = level;
+            let mut id = slugify(text, "", "-", Some(131));
+            if id.len() >= 128 {
+                id.truncate(128);
+                id += "..."
+            }
+            "prefix-".to_string() + &id + "-suffix"
+        }
+    };
+
+    static _INSTANCE_A: A = A {};
+    let ref_instance_a: &'static A = &_INSTANCE_A;
+
+    html_opts(
+        concat!(
+        "# README\n",
+        "# Hi.\n",
+        "## Hi 1.\n",
+        "### Hi.\n",
+        "#### Hello.\n",
+        "##### Hi.\n",
+        "###### Hello.\n",
+        "# Isn't it grand?\n",
+        "## hello world\n",
+        "### 你好，世界\n",
+        "#### 你好   世界\n",
+        "##### 你好世界    a  very           long and bad format line    ok there    should     be    an   end\n",
+        "###### 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127\n",
+        ),
+        concat!(
+        r###"<h1 class="title-anchor" data-level="1" id="prefix-readme-suffix"><a href="#link-prefix-readme-suffix" aria-hidden="true" class="link-anchor" data-level="1"  id="link-prefix-readme-suffix"></a>README</h1>
+<h1 class="title-anchor" data-level="1" id="prefix-hi-suffix"><a href="#link-prefix-hi-suffix" aria-hidden="true" class="link-anchor" data-level="1"  id="link-prefix-hi-suffix"></a>Hi.</h1>
+<h2 class="title-anchor" data-level="2" id="prefix-hi-1-suffix"><a href="#link-prefix-hi-1-suffix" aria-hidden="true" class="link-anchor" data-level="2"  id="link-prefix-hi-1-suffix"></a>Hi 1.</h2>
+<h3 class="title-anchor" data-level="3" id="prefix-hi-suffix-1"><a href="#link-prefix-hi-suffix-1" aria-hidden="true" class="link-anchor" data-level="3"  id="link-prefix-hi-suffix-1"></a>Hi.</h3>
+<h4 class="title-anchor" data-level="4" id="prefix-hello-suffix"><a href="#link-prefix-hello-suffix" aria-hidden="true" class="link-anchor" data-level="4"  id="link-prefix-hello-suffix"></a>Hello.</h4>
+<h5 class="title-anchor" data-level="5" id="prefix-hi-suffix-2"><a href="#link-prefix-hi-suffix-2" aria-hidden="true" class="link-anchor" data-level="5"  id="link-prefix-hi-suffix-2"></a>Hi.</h5>
+<h6 class="title-anchor" data-level="6" id="prefix-hello-suffix-1"><a href="#link-prefix-hello-suffix-1" aria-hidden="true" class="link-anchor" data-level="6"  id="link-prefix-hello-suffix-1"></a>Hello.</h6>
+<h1 class="title-anchor" data-level="1" id="prefix-isn-t-it-grand-suffix"><a href="#link-prefix-isn-t-it-grand-suffix" aria-hidden="true" class="link-anchor" data-level="1"  id="link-prefix-isn-t-it-grand-suffix"></a>Isn't it grand?</h1>
+<h2 class="title-anchor" data-level="2" id="prefix-hello-world-suffix"><a href="#link-prefix-hello-world-suffix" aria-hidden="true" class="link-anchor" data-level="2"  id="link-prefix-hello-world-suffix"></a>hello world</h2>
+<h3 class="title-anchor" data-level="3" id="prefix-ni-hao-shi-jie-suffix"><a href="#link-prefix-ni-hao-shi-jie-suffix" aria-hidden="true" class="link-anchor" data-level="3"  id="link-prefix-ni-hao-shi-jie-suffix"></a>你好，世界</h3>
+<h4 class="title-anchor" data-level="4" id="prefix-ni-hao-shi-jie-suffix-1"><a href="#link-prefix-ni-hao-shi-jie-suffix-1" aria-hidden="true" class="link-anchor" data-level="4"  id="link-prefix-ni-hao-shi-jie-suffix-1"></a>你好   世界</h4>
+<h5 class="title-anchor" data-level="5" id="prefix-ni-hao-shi-jie-a-very-long-and-bad-format-line-ok-there-should-be-an-end-suffix"><a href="#link-prefix-ni-hao-shi-jie-a-very-long-and-bad-format-line-ok-there-should-be-an-end-suffix" aria-hidden="true" class="link-anchor" data-level="5"  id="link-prefix-ni-hao-shi-jie-a-very-long-and-bad-format-line-ok-there-should-be-an-end-suffix"></a>你好世界    a  very           long and bad format line    ok there    should     be    an   end</h5>
+<h6 class="title-anchor" data-level="6" id="prefix-0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-33-34-35-36-37-38-39-40-41-42-43-44-45--suffix"><a href="#link-prefix-0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-33-34-35-36-37-38-39-40-41-42-43-44-45--suffix" aria-hidden="true" class="link-anchor" data-level="6"  id="link-prefix-0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-33-34-35-36-37-38-39-40-41-42-43-44-45--suffix"></a>0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127</h6>
+"###,
+        ),
+        |opts| opts.extension.header_id_fn = Some(ref_instance_a),
     );
 }
 
@@ -1049,6 +1106,7 @@ fn exercise_full_api() {
             footnotes: false,
             description_lists: false,
             front_matter_delimiter: None,
+            header_id_fn: None,
         },
         parse: ::ComrakParseOptions {
             smart: false,

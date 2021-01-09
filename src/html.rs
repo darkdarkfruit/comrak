@@ -446,7 +446,29 @@ impl<'o> HtmlFormatter<'o> {
                 if entering {
                     self.cr()?;
                     write!(self.output, "<h{}", nch.level)?;
-                    if let Some((ref prefix, ref suffix)) = self.options.extension.header_id_slugify
+                    if let Some(f) = self.options.extension.header_id_fn {
+                        let mut text_content = Vec::with_capacity(20);
+                        self.collect_text(node, &mut text_content);
+                        let text = String::from_utf8(text_content).unwrap();
+                        let mut id = f.process_header_id(nch.level, &text);
+                        id = self.anchorizer.anchorize(id);
+                        // dbg!(&id);
+                        write!(
+                            self.output,
+                            " class=\"title-anchor\" data-level=\"{}\" id=\"{}\"",
+                            nch.level, id
+                        )?;
+                        let link_id = "link-".to_string() + &id;
+                        // dbg!(&link_id);
+                        write!(
+                            self.output,
+                            "><a href=\"#{}\" aria-hidden=\"true\" class=\"link-anchor\" data-level=\"{}\"  id=\"{}\"></a>",
+                            link_id,
+                            nch.level,
+                            link_id
+                        )?;
+                    } else if let Some((ref prefix, ref suffix)) =
+                        self.options.extension.header_id_slugify
                     {
                         let mut text_content = Vec::with_capacity(20);
                         self.collect_text(node, &mut text_content);

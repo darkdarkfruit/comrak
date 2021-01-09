@@ -15,6 +15,7 @@ use scanners;
 use std::cell::RefCell;
 use std::cmp::min;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::mem;
 use std::str;
 use strings;
@@ -117,6 +118,13 @@ pub struct Parser<'a, 'o, 'c> {
     last_line_length: usize,
     options: &'o ComrakOptions,
     callback: Option<Callback<'c>>,
+}
+
+/// user can customized header id which might be very useful with TOC.
+pub trait HeaderIdProcessing: Debug {
+    /// level: the level of title tags, eg: 1 -> h1, 2 -> h2, ...
+    /// text : the text of h1/h2/..., you might use it to make a slugified anchor
+    fn process_header_id(&self, level: u32, text: &str) -> String;
 }
 
 #[derive(Default, Debug, Clone)]
@@ -239,6 +247,31 @@ pub struct ComrakExtensionOptions {
     /// "##);
     /// ```
     pub header_id_slugify: Option<(String, String)>,
+
+    /// Enable user to customize header_id generation.
+    /// ```
+    /// use comrak::HeaderIdProcessing;
+    /// #[derive(Debug)]
+    /// struct A {}
+    /// impl HeaderIdProcessing for A {
+    ///     fn process_header_id(&self, level: u32, text: &str) -> String {
+    ///         /// just a demo, you can use a more elegant slugify method.
+    ///         /// note: the final id will be lowercased anyway.
+    ///         format!("l{}-prefix-{}-suffix", level, text)
+    ///     }
+    /// };
+    ///
+    /// static _INSTANCE_A: A = A {};
+    /// let ref_instance_a: &'static A = &_INSTANCE_A;
+    /// # use comrak::{markdown_to_html, ComrakOptions};
+    /// let mut options = ComrakOptions::default();
+    /// options.extension.header_id_fn = Some(ref_instance_a);
+    /// assert_eq!(markdown_to_html("# README\n", &options),
+    ///            r##"<h1 class="title-anchor" data-level="1" id="l1-prefix-readme-suffix"><a href="#link-l1-prefix-readme-suffix" aria-hidden="true" class="link-anchor" data-level="1"  id="link-l1-prefix-readme-suffix"></a>README</h1>
+    /// "##);
+    ///```
+    ///
+    pub header_id_fn: Option<&'static dyn HeaderIdProcessing>,
 
     /// Enables the footnotes extension per `cmark-gfm`.
     ///

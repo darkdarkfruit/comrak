@@ -189,6 +189,7 @@ if the file does not exist.\
                     return (s.to_string(), "".to_string());
                 }
             }),
+            header_id_fn: None,
             footnotes: exts.remove("footnotes"),
             description_lists: exts.remove("description-lists"),
             front_matter_delimiter: matches
